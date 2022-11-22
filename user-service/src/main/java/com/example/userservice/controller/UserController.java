@@ -3,6 +3,7 @@ package com.example.userservice.controller;
 import com.example.userservice.model.CreateUserRequestModel;
 import com.example.userservice.model.CreateUserResponseModel;
 import com.example.userservice.model.LoginRequestModel;
+import com.example.userservice.model.UserResponseModel;
 import com.example.userservice.service.UserService;
 import com.example.userservice.shared.UserDto;
 import org.modelmapper.ModelMapper;
@@ -49,21 +50,14 @@ public class UserController {
                 .body(responseModel);
     }
 
-//    @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE},
-//            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-//    public ResponseEntity<CreateUserResponseModel> loginUser( @RequestBody LoginRequestModel loginRequestModel) {
-//
-//        ModelMapper modelMapper = new ModelMapper();
-//        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-//
-//        UserDto userDto = modelMapper.map(userRequestModel, UserDto.class);
-//
-//        UserDto createdUser = userService.createUser(userDto);
-//
-//        CreateUserResponseModel responseModel = modelMapper.map(createdUser, CreateUserResponseModel.class);
-//
-//        return ResponseEntity
-//                .status(HttpStatus.CREATED)
-//                .body(responseModel);
-//    }
+
+    @GetMapping(value = "/{userId}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    public ResponseEntity<UserResponseModel> getUser(@PathVariable("userId") String userId){
+
+        UserDto userDto=userService.getUserByUserId(userId);
+
+        UserResponseModel userResponseModel=new ModelMapper().map(userDto,UserResponseModel.class);
+
+        return ResponseEntity.status(HttpStatus.OK).body(userResponseModel);
+    }
 }

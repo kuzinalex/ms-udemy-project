@@ -1,18 +1,26 @@
 package com.example.userservice.service;
 
 import com.example.userservice.entity.UserEntity;
+import com.example.userservice.feign.AlbumServiceClient;
+import com.example.userservice.model.AlbumResponseModel;
 import com.example.userservice.repository.UserRepository;
 import com.example.userservice.shared.UserDto;
+import feign.FeignException;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -21,10 +29,19 @@ public class UserServiceImpl implements UserService{
     private UserRepository userRepository;
     private BCryptPasswordEncoder passwordEncoder;
 
+    private RestTemplate restTemplate;
+    private Environment environment;
+    private AlbumServiceClient albumServiceClient;
+
+    private Logger logger= LoggerFactory.getLogger(this.getClass());
+
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder,  RestTemplate restTemplate, Environment environment, AlbumServiceClient albumServiceClient) {
         this.userRepository = userRepository;
         this.passwordEncoder=passwordEncoder;
+        this.restTemplate=restTemplate;
+        this.environment=environment;
+        this.albumServiceClient=albumServiceClient;
     }
 
 
@@ -64,6 +81,28 @@ public class UserServiceImpl implements UserService{
         }
 
         return new ModelMapper().map(userEntity,UserDto.class);
+    }
+
+    @Override
+    public UserDto getUserByUserId(String userId) {
+
+        UserEntity userEntity=userRepository.findByUserId(userId);
+        if (userEntity==null) throw new UsernameNotFoundException("User not found");
+
+        UserDto userDto=new ModelMapper().map(userEntity,UserDto.class);
+
+        // using REST template
+//        String albumsUrl=String.format(environment.getProperty("albums.url"),userId);
+//        ResponseEntity<List<AlbumResponseModel>> albumsListResponse = restTemplate.exchange(albumsUrl, HttpMethod.GET, null, new ParameterizedTypeReference<List<AlbumResponseModel>>() {
+//        });
+//        List<AlbumResponseModel> albumsList=albumsListResponse.getBody();
+
+        // using Feign client
+        List<AlbumResponseModel> albumsList = albumServiceClient.getAlbums(userId);
+
+        userDto.setAlbums(albumsList);
+
+        return userDto;
     }
 
 }
