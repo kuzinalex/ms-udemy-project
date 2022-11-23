@@ -5,7 +5,6 @@ import com.example.userservice.feign.AlbumServiceClient;
 import com.example.userservice.model.AlbumResponseModel;
 import com.example.userservice.repository.UserRepository;
 import com.example.userservice.shared.UserDto;
-import feign.FeignException;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.slf4j.Logger;
